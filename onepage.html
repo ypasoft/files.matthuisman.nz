@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/krasimir/navigo/a30bbf6c220f3cf66a045b5f36ebb86e0244642f/lib/navigo.min.js"></script>
+
+    <style>
+        .selected {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <div id="navigation">
+        <ul>
+            <li><a href="#/" id="nav-home" class="nav">Home</a></li>
+            <li><a href="#/about" id="nav-about" class="nav">About Us</a></li>
+            <li><a href="#/contact" id="nav-contact" class="nav">Contact Us</a></li>
+            <li><a href="#/no/page/here" id="nav-404" class="nav">Test 404</a></li>
+        </ul>
+    </div>
+    <hr />
+</div>
+
+<div id="content"></div>
+
+<div id="footer">
+    <hr />
+</div>
+
+<script type="text/javascript">
+$(function() {
+    var pages = {
+        'home' : 'https://pastebin.com/raw/CgtAJX42',
+        'about' : 'https://pastebin.com/raw/WiSXnLG0',
+        'contact' : 'https://pastebin.com/raw/ZW9VR9UH',
+        '404' : 'https://pastebin.com/raw/qMs4PPfH',
+    }
+
+    function backgroundcache(ignore) {
+        $.each( pages, function( page, url ) {
+            if (page != ignore) {
+                getContent(page, background=true);
+            }
+        });
+    }
+
+    function getContent(page, background=false) {
+        var id = 'content-'+page;
+        var contentContainer = $('#'+id);
+
+        if (contentContainer && contentContainer.length !== 0) {
+            if (background == true) { return; }
+            return contentContainer.show();
+        }
+
+        contentContainer = $('<div>');
+        contentContainer.attr('id', id).addClass('contentContainer');
+        if (background == true) { contentContainer.hide(); } 
+        contentContainer.append('<img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" alt="Loading please wait" class="spinner">')
+        $('#content').append(contentContainer);
+
+        $.ajax({
+            url: 'https://cors-anywhere.herokuapp.com/' + pages[page],
+            success: function(data) {
+                contentContainer.find('.spinner').remove();
+                contentContainer.html(data);
+            },
+        });
+    }
+
+    function setPage(page) {
+        if (!(page in pages)) {
+            return setPage('404');
+        }
+
+        $('.contentContainer').hide();
+        $('.nav').removeClass('selected');
+        $('#nav-'+page).addClass('selected');
+        document.title = page;
+
+        getContent(page)
+        backgroundcache(ignore=page);
+    }
+
+    var router = new Navigo(root=null, useHash=false);
+    router.on({
+        '#/:page': function (params) {
+            setPage(params.page);
+        },
+        '(#/)?$': function () {
+            setPage('home');
+        },
+    }).resolve();
+});
+</script>
+
+</body>
+</html>
